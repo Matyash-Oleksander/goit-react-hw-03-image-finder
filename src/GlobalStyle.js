@@ -1,17 +1,17 @@
-@import-normalize; /* bring in normalize.css styles */
+import { createGlobalStyle } from 'styled-components';
+// import 'modern-normalize';
 
+export const GlobalStyle = createGlobalStyle`
 html {
   box-sizing: border-box;
   width: 100vw;
   overflow-x: hidden;
 }
-
 *,
 *::before,
 *::after {
   box-sizing: inherit;
 }
-
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
@@ -21,19 +21,15 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
 img {
   display: block;
   max-width: 100%;
   height: auto;
 }
-
-/*
- * Стили компонента App
- */
-/* .App {
+.app {
   display: grid;
   grid-template-columns: 1fr;
   grid-gap: 16px;
   padding-bottom: 24px;
-} */
+}
+`;
