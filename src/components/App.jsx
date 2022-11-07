@@ -17,17 +17,10 @@ export class App extends Component {
     per_page: 12,
     totalPages: 0,
     largeImageURL: '',
-    contentLoad: false,
+    contentLoad: true,
     showModal: false,
-    message: '',
+    message: 'To display pictures, enter a query in the search field',
   };
-
-  componentDidMount() {
-    this.setState({
-      message: 'To display pictures, enter a query in the search field',
-    });
-    this.getData();
-  }
 
   componentDidUpdate(_, prevState) {
     if (
