@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { Component } from 'react';
 import { fetchPhoto } from '../api/api';
 import { SearchField } from './Searchbar';
 import { ImageGallery } from './ImageGallery';
@@ -7,82 +7,113 @@ import { Button } from './Button';
 import { Loader } from './Loader';
 import { Modal } from './Modal';
 import { Message } from './Message';
+// import { toast } from 'react-toastify';
 
-export const App = () => {
-  const per_page = 12;
-  const [photos, setPhotos] = useState([]);
-  const [request, setRequest] = useState('');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [largeImageURL, setLargeImageURL] = useState('');
-  const [message, setMessage] = useState(
-    'To display pictures, enter a query in the search field'
-  );
-  const [contentLoad, setContentLoad] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+export class App extends Component {
+  state = {
+    photos: [],
+    request: '',
+    page: 1,
+    per_page: 12,
+    totalPages: 0,
+    largeImageURL: '',
+    contentLoad: false,
+    showModal: false,
+    message: '',
+  };
 
-  useEffect(() => {
-    setContentLoad(false);
+  componentDidMount() {
+    this.setState({
+      message: 'To display pictures, enter a query in the search field',
+    });
+    this.getData();
+  }
+
+  componentDidUpdate(_, prevState) {
+    if (
+      prevState.request !== this.state.request ||
+      prevState.page !== this.state.page
+    ) {
+      this.setState({ message: '' });
+      this.getData(this.state.request, this.state.page, this.state.per_page);
+    }
+  }
+
+  getData = (request, page, per_page) => {
+    this.setState({ contentLoad: false });
     if (!request) {
-      setContentLoad(true);
+      this.setState({ contentLoad: true });
       return;
     }
     fetchPhoto(request, page, per_page).then(r => {
       if (r.hits.length === 0) {
-        setMessage('Sorry, nothing was found, please try your search again');
-        setContentLoad(true);
-        return;
+        this.setState({
+          message: 'Sorry, nothing was found, please try your search again',
+        });
       }
-      const photosContent = r.hits.map(
-        ({ id, webformatURL, largeImageURL }) => ({
-          id,
-          webformatURL,
-          largeImageURL,
-        })
-      );
-      setMessage('');
-      setPhotos(prevState => [...prevState, ...photosContent]);
-      setTotalPages(r.totalHits / per_page);
-      setContentLoad(true);
+      const photos = r.hits.map(({ id, webformatURL, largeImageURL }) => ({
+        id,
+        webformatURL,
+        largeImageURL,
+      }));
+      this.setState(prevState => ({
+        photos: [...prevState.photos, ...photos],
+        totalPages: r.totalHits / this.state.per_page,
+        contentLoad: true,
+      }));
     });
-  }, [page, request]);
+  };
 
-  const searchResponse = e => {
+  searchResponse = e => {
     e.preventDefault();
     if (!e.target.findForm.value) {
-      setMessage('Please fill in the search field');
+      this.setState({
+        message: 'Please fill in the search field',
+      });
     }
-    setRequest(e.target.findForm.value);
-    setPage(1);
-    setPhotos([]);
+    this.setState({ request: e.target.findForm.value, page: 1, photos: [] });
     e.target.reset();
   };
 
-  const loadMore = () => {
-    setPage(page + 1);
+  loadMore = () => {
+    this.setState(prevState => ({
+      page: prevState.page + 1,
+    }));
   };
 
-  const getLargeImg = largeImageURL => {
-    setShowModal(true);
-    setLargeImageURL(largeImageURL);
+  getLargeImg = largeImageURL => {
+    this.setState({ showModal: true, largeImageURL: largeImageURL });
   };
 
-  const onCloseModal = () => {
-    setShowModal(false);
+  onCloseModal = () => {
+    this.setState({ showModal: false });
   };
 
-  return (
-    <div className="app">
-      <SearchField search={searchResponse} />
-      {message && <Message message={message} />}
-      <ImageGallery photos={photos} getLargeImg={getLargeImg} />
-      {!contentLoad && <Loader />}
-      {totalPages > page && <Button text="Load more" loadMore={loadMore} />}
-      {showModal && (
-        <Modal largeImageURL={largeImageURL} onClose={onCloseModal} />
-      )}
+  render() {
+    const {
+      photos,
+      page,
+      totalPages,
+      largeImageURL,
+      contentLoad,
+      showModal,
+      message,
+    } = this.state;
+    return (
+      <div className="app">
+        <SearchField search={this.searchResponse} />
+        {message && <Message message={message} />}
+        <ImageGallery photos={photos} getLargeImg={this.getLargeImg} />
+        {!contentLoad && <Loader />}
+        {totalPages > page && (
+          <Button text="Load more" loadMore={this.loadMore} />
+        )}
+        {showModal && (
+          <Modal largeImageURL={largeImageURL} onClose={this.onCloseModal} />
+        )}
 
-      <GlobalStyle />
-    </div>
-  );
-};
+        <GlobalStyle />
+      </div>
+    );
+  }
+}
